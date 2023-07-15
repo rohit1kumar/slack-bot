@@ -1,0 +1,42 @@
+{
+  "name": "slack-bot",
+  "version": "1.0.0",
+  "description": "A Slack bot with data querying capabilities",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "format": "prettier --write \"*.js\"",
+    "prepare": "husky install && npx husky add .husky/pre-commit \"npm run pre-commit\"",
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rohit1kumar/slack-bot.git"
+  },
+  "keywords": [
+    "\"slack\"",
+    "\"slack-bot\"",
+    "\"ai\""
+  ],
+  "author": "Rohit Kumar <kumar1rohit@outlook.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rohit1kumar/slack-bot/issues"
+  },
+  "homepage": "https://github.com/rohit1kumar/slack-bot#readme",
+  "devDependencies": {
+    "eslint": "^8.39.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.2.2",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8"
+  }
+}
