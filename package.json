@@ -2,7 +2,7 @@
   "name": "slack-bot",
   "version": "1.0.0",
   "description": "A Slack bot with data querying capabilities",
-  "main": "index.js",
+  "main": "slack.js",
   "scripts": {
     "dev": "nodemon index.js",
     "format": "prettier --write \"*.js\"",
