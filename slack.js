@@ -1,12 +1,7 @@
 const { App } = require('@slack/bolt')
 const executeQuery = require('./query')
 const { WebClient } = require('@slack/web-api')
-const {
-	insertChannelDetails,
-	deleteChannelDetails,
-	updateNextMessageTime,
-	getChannelDetails
-} = require('./db')
+const db = require('./db')
 
 let BOT_ID
 
@@ -41,6 +36,10 @@ async function handleAppMention({ event }) {
 			resp || 'Sorry, I did not understand that. Please try again.'
 		await postMessageToChannel(channel, message)
 	} catch (error) {
+		await postMessageToChannel(
+			channel,
+			'Sorry, I did not understand that. Please try again.'
+		)
 		console.error(error)
 	}
 }
@@ -62,7 +61,7 @@ async function handleMemberJoinedChannel({ event }) {
 
 	try {
 		await Promise.all([
-			insertChannelDetails(channel, nextMessageTime),
+			db.add(channel, nextMessageTime),
 			postMessageToChannel(channel, welcomeMessage)
 		])
 	} catch (error) {
@@ -73,7 +72,7 @@ async function handleMemberJoinedChannel({ event }) {
 async function handleChannelLeft({ event }) {
 	const { channel } = event
 	try {
-		await deleteChannelDetails(channel)
+		await db.remove(channel)
 	} catch (error) {
 		console.error(error)
 	}
@@ -83,14 +82,14 @@ async function scheduleMessage() {
 	setInterval(async () => {
 		const currentTime = new Date()
 		try {
-			const channelDetails = await getChannelDetails()
+			const channelDetails = await db.getAll()
 			for (const { channel, nextMessageTime } of channelDetails) {
 				if (currentTime >= nextMessageTime) {
 					await postMessageToChannel(channel, 'Do you have any questions?')
 					const updatedNextMessageTime = new Date(
 						nextMessageTime.getTime() + TIME_INTERVAL
 					)
-					await updateNextMessageTime(channel, updatedNextMessageTime)
+					await db.update(channel, updatedNextMessageTime)
 				}
 			}
 		} catch (error) {

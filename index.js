@@ -1,9 +1,9 @@
 require('dotenv').config()
-const { connectToMongoDB } = require('./db')
+const db = require('./db')
 const { registerEventHandlers, app, scheduleMessage } = require('./slack')
 async function startSlackApp() {
 	try {
-		await connectToMongoDB()
+		await db.connect()
 		await app.start(process.env.PORT || 3000)
 		console.log('⚡️ Bolt app is running!')
 		registerEventHandlers()
