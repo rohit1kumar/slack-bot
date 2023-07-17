@@ -8,7 +8,7 @@ const {
 	getChannelDetails
 } = require('./db')
 
-const BOT_ID = 'U05H8754KR9' // Databot's user ID
+let BOT_ID
 
 const TIME_INTERVAL = 3600000 // 60 minutes in milliseconds
 
@@ -47,11 +47,16 @@ async function handleAppMention({ event }) {
 
 async function handleMemberJoinedChannel({ event }) {
 	const { user, channel, event_ts } = event
+	if (!BOT_ID) {
+		const resp = await client.auth.test()
+		BOT_ID = resp.user_id
+	}
+
+	console.log('BOT ID: ', BOT_ID)
 	const isBotUser = user === BOT_ID
 	const welcomeMessage = isBotUser
 		? "I'm Databot and I can help you with your data needs"
 		: `Welcome to the channel, <@${user}>, I'm Databot and I can help you with your data needs.`
-	console.log(event_ts)
 	const addedTime = new Date(parseFloat(event_ts) * 1000)
 	const nextMessageTime = new Date(addedTime.getTime() + TIME_INTERVAL)
 
