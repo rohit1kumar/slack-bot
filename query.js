@@ -64,28 +64,21 @@ async function generateSQLQuery(question) {
 	return generatedQuery
 }
 
-function executeQuery(query) {
-	return new Promise((resolve, reject) => {
-		generateSQLQuery(query)
-			.then((response) => {
-				db.all(response, (err, rows) => {
-					if (err) {
-						reject(err)
-					} else {
-						const count = Object.values(rows[0])[0]
-						const resp = `There are ${count} users.`
-						resolve(resp)
-					}
-				})
-			})
-			.catch((error) => {
-				reject(error)
-			})
+async function executeQuery(query) {
+	const response = await generateSQLQuery(query)
+	const rows = await new Promise((resolve, reject) => {
+		db.all(response, (err, rows) => {
+			if (err) {
+				reject(err)
+			} else {
+				resolve(rows)
+			}
+		})
 	})
-}
 
-// executeQuery("How many users joined yesterday?")
-//     .then(resp => console.log(resp))
-//     .catch(err => console.log(err));
+	const count = Object.values(rows[0])[0]
+	const resp = `There are ${count} users.`
+	return resp
+}
 
 module.exports = executeQuery
