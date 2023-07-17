@@ -1,52 +1,135 @@
-require('dotenv').config()
+// app.js
 const { App } = require('@slack/bolt')
 const executeQuery = require('./query')
+const { WebClient } = require('@slack/web-api')
+const { MongoClient } = require('mongodb')
 
-const BOT_ID = 'U05H8754KR9' // databot's user id, to prevent from responding to itself when joining a channel
+const BOT_ID = 'U05H8754KR9' // Databot's user ID, to prevent self-responses
+const MONGODB_URI = 'mongodb://localhost:27017' // MongoDB connection string
+const DB_NAME = 'slackbot' // Name of your MongoDB database
+const COLLECTION_NAME = 'channelDetails' // Name of the collection to store channel details
+const TIME_INTERVAL = 3600000 // 60 minutes in milliseconds
 
 const app = new App({
 	signingSecret: process.env.SLACK_SIGNING_SECRET,
-	token: process.env.SLACK_BOT_TOKEN,
-	// appToken: process.env.SLACK_APP_TOKEN,
-	logLevel: 'debug'
+	token: process.env.SLACK_BOT_TOKEN
 })
 
-app.event('app_mention', async ({ event, client }) => {
+const client = new WebClient(process.env.SLACK_BOT_TOKEN)
+
+let dbClient
+let channelDetailsCollection
+
+async function startSlackApp() {
+	await connectToMongoDB()
+	registerEventHandlers()
+	await app.start(process.env.PORT || 3000)
+	console.log('⚡️ Bolt app is running!')
+	scheduleMessageSending()
+}
+
+async function connectToMongoDB() {
+	dbClient = await MongoClient.connect(MONGODB_URI, {
+		useUnifiedTopology: true
+	})
+	const db = dbClient.db(DB_NAME)
+	channelDetailsCollection = db.collection(COLLECTION_NAME)
+}
+
+function registerEventHandlers() {
+	app.event('app_mention', handleAppMention)
+	app.event('member_joined_channel', handleMemberJoinedChannel)
+	app.event('channel_left', handleChannelLeft)
+}
+
+function postMessageToChannel(channel, message) {
+	return client.chat.postMessage({
+		channel,
+		text: message
+	})
+}
+
+async function insertChannelDetails(channel, nextMessageTime) {
+	return channelDetailsCollection.insertOne({
+		channel,
+		nextMessageTime
+	})
+}
+
+async function deleteChannelDetails(channel) {
+	console.log(`Removed from channel ${channel}, deleting details from MongoDB`)
+	return channelDetailsCollection.deleteOne({ channel })
+}
+
+async function updateNextMessageTime(channel, nextMessageTime) {
+	return channelDetailsCollection.updateOne(
+		{ channel },
+		{ $set: { nextMessageTime } }
+	)
+}
+
+async function handleAppMention({ event }) {
 	const { channel, text } = event
 	try {
 		const userText = text.replace(/^<[^>]+>\s*/, '')
 		const resp = await executeQuery(userText)
-		await client.chat.postMessage({
-			channel,
-			text: resp || 'Sorry, I did not understand that. Please try again.'
-		})
+		const message =
+			resp || 'Sorry, I did not understand that. Please try again.'
+		await postMessageToChannel(channel, message)
 	} catch (error) {
 		console.error(error)
 	}
-})
+}
 
-app.event('member_joined_channel', async ({ event, client }) => {
-	let text
-	const { user, channel } = event
-	if (user === BOT_ID) {
-		text = "I'm Databot and I can help you with your data needs"
-	} else {
-		text = `Welcome to the channel, <@${user}>, I'm Databot and I can help you with your data needs.`
-	}
+async function handleMemberJoinedChannel({ event }) {
+	const { user, channel, event_ts } = event
+	const isBotUser = user === BOT_ID
+	const welcomeMessage = isBotUser
+		? "I'm Databot and I can help you with your data needs"
+		: `Welcome to the channel, <@${user}>, I'm Databot and I can help you with your data needs.`
+	console.log(event_ts)
+	const addedTime = new Date(parseFloat(event_ts) * 1000)
+	const nextMessageTime = new Date(addedTime.getTime() + TIME_INTERVAL)
 
 	try {
-		await client.chat.postMessage({ channel, text })
+		await Promise.all([
+			insertChannelDetails(channel, nextMessageTime),
+			postMessageToChannel(channel, welcomeMessage)
+		])
 	} catch (error) {
 		console.error(error)
 	}
-})
+}
 
-;(async () => {
+async function handleChannelLeft({ event }) {
+	const { channel } = event
 	try {
-		// Start the app
-		await app.start(process.env.PORT || 3000)
-		console.log('⚡️ Bolt app is running!')
+		await deleteChannelDetails(channel)
 	} catch (error) {
-		console.error('Error starting Bolt app:', error)
+		console.error(error)
 	}
-})()
+}
+
+async function scheduleMessageSending() {
+	setInterval(async () => {
+		const currentTime = new Date()
+
+		try {
+			const channelDetails = await channelDetailsCollection.find({}).toArray()
+
+			for (const { channel, nextMessageTime } of channelDetails) {
+				if (currentTime >= nextMessageTime) {
+					await postMessageToChannel(channel, 'Do you have any questions?')
+					const updatedNextMessageTime = new Date(
+						nextMessageTime.getTime() + TIME_INTERVAL
+					)
+					await updateNextMessageTime(channel, updatedNextMessageTime)
+				}
+			}
+		} catch (error) {
+			console.error(error)
+		}
+	}, 60000)
+}
+
+module.exports = { startSlackApp }
