@@ -4,10 +4,13 @@ const executeQuery = require('./query')
 const { WebClient } = require('@slack/web-api')
 const { MongoClient } = require('mongodb')
 
-const BOT_ID = 'U05H8754KR9' // Databot's user ID, to prevent self-responses
-const MONGODB_URI = 'mongodb://localhost:27017' // MongoDB connection string
-const DB_NAME = 'slackbot' // Name of your MongoDB database
-const COLLECTION_NAME = 'channelDetails' // Name of the collection to store channel details
+const BOT_ID = 'U05H8754KR9' // Databot's user ID
+const MONGO_HOST = process.env.MONGO_HOST || 'localhost'
+
+const MONGODB_URI = `mongodb://${MONGO_HOST}:27017`
+
+const DB_NAME = process.env.MONGO_DB_NAME || 'slackbot'
+const COLLECTION_NAME = 'channelDetails'
 const TIME_INTERVAL = 3600000 // 60 minutes in milliseconds
 
 const app = new App({
@@ -32,6 +35,7 @@ async function connectToMongoDB() {
 	dbClient = await MongoClient.connect(MONGODB_URI, {
 		useUnifiedTopology: true
 	})
+	console.log('Connected to MongoDB')
 	const db = dbClient.db(DB_NAME)
 	channelDetailsCollection = db.collection(COLLECTION_NAME)
 }

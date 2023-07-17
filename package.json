@@ -2,9 +2,10 @@
   "name": "slack-bot",
   "version": "1.0.0",
   "description": "A Slack bot with data querying capabilities",
-  "main": "slack.js",
+  "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
+    "start": "node index.js",
     "format": "prettier --write \"*.js\"",
     "prepare": "husky install && npx husky add .husky/pre-commit \"npm run pre-commit\"",
     "pre-commit": "lint-staged"

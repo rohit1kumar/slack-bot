@@ -9,7 +9,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration)
 
 // Create db if it doesn't exist
-const db = new sqlite3.Database('')
+const db = new sqlite3.Database(':memory:')
 
 db.serialize(() => {
 	db.run(`
