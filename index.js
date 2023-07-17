@@ -1,11 +1,16 @@
-// index.js
-const { startSlackApp } = require('./slack')
-
-;(async () => {
+require('dotenv').config()
+const { connectToMongoDB } = require('./db')
+const { registerEventHandlers, app, scheduleMessage } = require('./slack')
+async function startSlackApp() {
 	try {
-		console.log('Starting the app...')
-		await startSlackApp()
+		await connectToMongoDB()
+		await app.start(process.env.PORT || 3000)
+		console.log('⚡️ Bolt app is running!')
+		registerEventHandlers()
+		scheduleMessage()
 	} catch (error) {
-		console.error('Error starting the app:', error)
+		console.error('Error starting Slack app', error)
 	}
-})()
+}
+
+startSlackApp()

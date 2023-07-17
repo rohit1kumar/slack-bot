@@ -1,16 +1,15 @@
-// app.js
 const { App } = require('@slack/bolt')
 const executeQuery = require('./query')
 const { WebClient } = require('@slack/web-api')
-const { MongoClient } = require('mongodb')
+const {
+	insertChannelDetails,
+	deleteChannelDetails,
+	updateNextMessageTime,
+	getChannelDetails
+} = require('./db')
 
 const BOT_ID = 'U05H8754KR9' // Databot's user ID
-const MONGO_HOST = process.env.MONGO_HOST || 'localhost'
 
-const MONGODB_URI = `mongodb://${MONGO_HOST}:27017`
-
-const DB_NAME = process.env.MONGO_DB_NAME || 'slackbot'
-const COLLECTION_NAME = 'channelDetails'
 const TIME_INTERVAL = 3600000 // 60 minutes in milliseconds
 
 const app = new App({
@@ -20,56 +19,17 @@ const app = new App({
 
 const client = new WebClient(process.env.SLACK_BOT_TOKEN)
 
-let dbClient
-let channelDetailsCollection
-
-async function startSlackApp() {
-	await connectToMongoDB()
-	registerEventHandlers()
-	await app.start(process.env.PORT || 3000)
-	console.log('⚡️ Bolt app is running!')
-	scheduleMessageSending()
-}
-
-async function connectToMongoDB() {
-	dbClient = await MongoClient.connect(MONGODB_URI, {
-		useUnifiedTopology: true
-	})
-	console.log('Connected to MongoDB')
-	const db = dbClient.db(DB_NAME)
-	channelDetailsCollection = db.collection(COLLECTION_NAME)
-}
-
 function registerEventHandlers() {
 	app.event('app_mention', handleAppMention)
 	app.event('member_joined_channel', handleMemberJoinedChannel)
 	app.event('channel_left', handleChannelLeft)
 }
 
-function postMessageToChannel(channel, message) {
+async function postMessageToChannel(channel, message) {
 	return client.chat.postMessage({
 		channel,
 		text: message
 	})
-}
-
-async function insertChannelDetails(channel, nextMessageTime) {
-	return channelDetailsCollection.insertOne({
-		channel,
-		nextMessageTime
-	})
-}
-
-async function deleteChannelDetails(channel) {
-	console.log(`Removed from channel ${channel}, deleting details from MongoDB`)
-	return channelDetailsCollection.deleteOne({ channel })
-}
-
-async function updateNextMessageTime(channel, nextMessageTime) {
-	return channelDetailsCollection.updateOne(
-		{ channel },
-		{ $set: { nextMessageTime } }
-	)
 }
 
 async function handleAppMention({ event }) {
@@ -114,13 +74,11 @@ async function handleChannelLeft({ event }) {
 	}
 }
 
-async function scheduleMessageSending() {
+async function scheduleMessage() {
 	setInterval(async () => {
 		const currentTime = new Date()
-
 		try {
-			const channelDetails = await channelDetailsCollection.find({}).toArray()
-
+			const channelDetails = await getChannelDetails()
 			for (const { channel, nextMessageTime } of channelDetails) {
 				if (currentTime >= nextMessageTime) {
 					await postMessageToChannel(channel, 'Do you have any questions?')
@@ -136,4 +94,4 @@ async function scheduleMessageSending() {
 	}, 60000)
 }
 
-module.exports = { startSlackApp }
+module.exports = { scheduleMessage, registerEventHandlers, app }

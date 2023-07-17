@@ -1,14 +1,12 @@
-require('dotenv').config()
 const sqlite3 = require('sqlite3').verbose()
 const { Configuration, OpenAIApi } = require('openai')
-// Configure the OpenAI API
+
 const configuration = new Configuration({
 	apiKey: process.env.OPENAI_API_KEY
 })
 
 const openai = new OpenAIApi(configuration)
 
-// Create db if it doesn't exist
 const db = new sqlite3.Database(':memory:')
 
 db.serialize(() => {
