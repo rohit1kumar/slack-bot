@@ -9,7 +9,7 @@ services:
       - '3000:3000'
     restart: always
     depends_on:
-      - mongo
+      - db
     volumes:
       - .:/app
     environment:
@@ -18,7 +18,7 @@ services:
       - PORT=3000
     env_file:
       - .env
-      
+
   db:
     image: mongo
     restart: always
