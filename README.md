@@ -10,7 +10,16 @@
 
     how many users from Lucknow use Samsung phones?
 
-    How many users joined yesterday?
+[![Watch the video to see the bot in action]
+(https://img.youtube.com/vi/3KAf3UcZR2s/hqdefault.jpg)]
+(https://www.youtube.com/watch?v=3KAf3UcZR2s)
+
+## How to Install & Use the bot in your workspace
+1. Visit https://databot.onrender.com/slack/install and click on `Add to Slack` button, you will be redirected to Slack's OAuth page and accept the permissions.
+2. Invite the bot to the channel you want to use it in.
+3. Mention the bot in the channel with the query and the bot will respond with the result.
+
+    eg: `@databot how many users from Lucknow use Samsung phones?`
 ---
 ## Installation for local development
 1. Clone the repository
