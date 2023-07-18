@@ -14,6 +14,10 @@ const appMentionCallback = async ({ client, event }) => {
 		})
 	} catch (error) {
 		console.error(error)
+		await client.chat.postMessage({
+			channel: event.channel,
+			text: `Hi <@${event.user}>! Something went wrong, please try again, if the issue persists, Please contact the developer`
+		})
 	}
 }
 

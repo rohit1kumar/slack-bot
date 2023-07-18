@@ -6,6 +6,11 @@
 - Can be installed in any workspace using the [OAuth flow](https://api.slack.com/authentication/oauth-v2).
 - Uses [OpenAI's](https://platform.openai.com/examples/default-sql-translate) API to translate natural language to SQL query.
 
+### Try asking question in this manner:
+
+    how many users from Lucknow use Samsung phones?
+
+    How many users joined yesterday?
 ---
 ## Installation for local development
 1. Clone the repository
@@ -47,4 +52,8 @@
 ```
     chmod +x docker_run.sh
     ./docker_run.sh
+```
+8. You can seed the SQLite database with the following command:
+```
+    npm run seed
 ```

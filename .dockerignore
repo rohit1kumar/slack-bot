@@ -11,5 +11,4 @@ README.md
 .eslintrc.json
 docker_run.sh
 .husky
-.git
-*.db
+    .git

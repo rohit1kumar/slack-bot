@@ -23,7 +23,6 @@ async function generateSQLQuery(question) {
 			content: `${question}, write only the SQL query`
 		}
 	]
-
 	const response = await openai.createChatCompletion({
 		model: 'gpt-3.5-turbo',
 		messages,
@@ -33,9 +32,31 @@ async function generateSQLQuery(question) {
 		frequency_penalty: 0,
 		presence_penalty: 0
 	})
-
 	const generatedQuery = response?.data?.choices[0]?.message?.content
 	return generatedQuery
 }
 
-module.exports = { generateSQLQuery }
+async function convertToReadableFormat(query, result) {
+	const content = `SQL query :"${query}",
+	SQL result: "${result}",
+	Now directly write a very short point in English that describes the result of the SQL query. Otherwise return "I don't understand, please try again"`
+	const messages = [
+		{
+			role: 'user',
+			content: content
+		}
+	]
+	const response = await openai.createChatCompletion({
+		model: 'gpt-3.5-turbo',
+		messages,
+		temperature: 0,
+		max_tokens: 1024,
+		top_p: 1,
+		frequency_penalty: 0,
+		presence_penalty: 0
+	})
+	const readableFormat = response?.data?.choices[0]?.message?.content
+	return readableFormat
+}
+
+module.exports = { generateSQLQuery, convertToReadableFormat }

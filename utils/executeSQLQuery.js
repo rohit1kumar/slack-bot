@@ -1,6 +1,11 @@
 const sqlite3 = require('sqlite3').verbose()
-const { generateSQLQuery } = require('./generateSQLQuery')
-const db = new sqlite3.Database(':memory:')
+const {
+	generateSQLQuery,
+	convertToReadableFormat
+} = require('./generateSQLQuery')
+
+const dbFile = './utils/user.db'
+const db = new sqlite3.Database(dbFile)
 
 db.serialize(() => {
 	db.run(`
@@ -27,6 +32,7 @@ db.serialize(() => {
 
 async function executeSQLQuery(query) {
 	const response = await generateSQLQuery(query)
+	console.log('generated sql: ', response)
 	const rows = await new Promise((resolve, reject) => {
 		db.all(response, (err, rows) => {
 			if (err) {
@@ -36,9 +42,12 @@ async function executeSQLQuery(query) {
 			}
 		})
 	})
-
-	const count = Object.values(rows[0])[0]
-	const resp = `There are ${count} users.`
+	// console.log("rows: ", rows)
+	// const count = Object.values(rows[0])[0]
+	// const resp = `There are ${count} users.`
+	console.log('resp from sqlite: ', JSON.stringify(rows))
+	const resp = await convertToReadableFormat(response, JSON.stringify(rows))
+	console.log('resp from gpt3: ', resp)
 	return resp
 }
 

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
+    "seed": "node ./utils/seed.js",
     "format": "prettier --write \"*.js\"",
     "prepare": "husky install && npx husky add .husky/pre-commit \"npm run pre-commit\"",
     "pre-commit": "lint-staged"
