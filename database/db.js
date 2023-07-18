@@ -3,7 +3,8 @@ require('dotenv').config()
 
 const MONGO_HOST = process.env.MONGO_HOST || 'localhost'
 const MONGO_DB_NAME = process.env.MONGO_DB_NAME || 'slackbot'
-const uri = `mongodb://${MONGO_HOST}:27017/${MONGO_DB_NAME}`
+const uri =
+	process.env.MONGO_URI || `mongodb://${MONGO_HOST}:27017/${MONGO_DB_NAME}`
 
 const connect = async function () {
 	mongoose.connect(uri)
