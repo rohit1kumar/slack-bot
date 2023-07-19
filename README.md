@@ -54,13 +54,15 @@
     CLIENT_ID
     OPENAI_API_KEY
 ```
+7. You can seed the SQLite database with the following command:
+```
+    npm run seed
+```
 
-7. Run the docker and execute the following commands to start the bot:
+8. Run the docker and execute the following commands to start the bot:
 ```
     chmod +x docker_run.sh
     ./docker_run.sh
 ```
-8. You can seed the SQLite database with the following command:
-```
-    npm run seed
-```
+
+**Note:** having some issue related to SQLITE while running the project in Docker, so run this locally for now.
